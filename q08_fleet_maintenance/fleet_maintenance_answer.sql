@@ -1,11 +1,4 @@
--- ICT371 Advanced Database - Question 8: Transport Fleet Maintenance
--- Bwalya Marvelous (202406501), Mulungushi University
--- PostgreSQL. Run the whole file in order: psql -d yourdb -f answer.sql
--- Scheduled jobs need the pg_cron extension.
-
--- ======================================================================
--- (a) Database and seed data [6 marks] - tables and seed data
--- ======================================================================
+-- (a) Database and seed data 
 CREATE TABLE vehicles (
   vehicle_id SERIAL PRIMARY KEY,
   registration VARCHAR(20) NOT NULL UNIQUE,
@@ -33,9 +26,9 @@ INSERT INTO vehicles (registration, current_odometer, last_service_odometer) VAL
 ('ZM 2002 B', 30000, 26000),   -- 4,000 km since service
 ('ZM 3003 C', 45000, 39000);   -- 6,000 km since service
 
--- ======================================================================
--- (b) Function [6 marks]
--- ======================================================================
+
+-- (b) Function 
+
 CREATE OR REPLACE FUNCTION fn_service_due(p_vehicle_id INT)
 RETURNS BOOLEAN LANGUAGE plpgsql STABLE AS $$
 DECLARE v_km INT;
@@ -48,9 +41,8 @@ BEGIN
   RETURN v_km >= 5000;
 END $$;
 
--- ======================================================================
--- (c) Procedure [8 marks]
--- ======================================================================
+
+-- (c) Procedure
 CREATE OR REPLACE PROCEDURE pr_record_trip(
   p_vehicle_id INT, p_trip_on DATE, p_start INT, p_end INT)
 LANGUAGE plpgsql AS $$
@@ -70,9 +62,8 @@ BEGIN
   VALUES (p_vehicle_id, p_trip_on, p_start, p_end);
 END $$;
 
--- ======================================================================
--- (d) Trigger [8 marks]
--- ======================================================================
+-- (d) Trigger 
+
 CREATE OR REPLACE FUNCTION trg_fn_trip_odometer() RETURNS TRIGGER
 LANGUAGE plpgsql AS $$
 DECLARE v_current INT;
@@ -99,10 +90,7 @@ CREATE TRIGGER trg_trip_odometer
 BEFORE INSERT ON trips
 FOR EACH ROW EXECUTE FUNCTION trg_fn_trip_odometer();
 
--- ======================================================================
 -- (a) continued - seed data that needs the code above
--- ======================================================================
--- run after (c) and the trigger (d) are installed
 CALL pr_record_trip(1, DATE '2026-11-18', 20000, 20300);
 CALL pr_record_trip(1, DATE '2026-11-22', 20300, 20650);
 CALL pr_record_trip(2, DATE '2026-11-19', 30000, 30600);
@@ -110,9 +98,8 @@ CALL pr_record_trip(2, DATE '2026-11-23', 30600, 31200);
 CALL pr_record_trip(3, DATE '2026-11-20', 45000, 45400);
 CALL pr_record_trip(3, DATE '2026-11-24', 45400, 45900);
 
--- ======================================================================
--- (e) View [5 marks]
--- ======================================================================
+
+-- (e) View
 CREATE OR REPLACE VIEW v_service_due AS
 SELECT registration,
        current_odometer - last_service_odometer AS km_since_service
@@ -121,9 +108,8 @@ WHERE current_odometer - last_service_odometer >= 5000;
 
 SELECT * FROM v_service_due;
 
--- ======================================================================
--- (f) Index [5 marks]
--- ======================================================================
+
+-- (f) Index
 CREATE INDEX idx_trips_vehicle_trip_on ON trips (vehicle_id, trip_on);
 
 EXPLAIN
@@ -131,9 +117,7 @@ SELECT * FROM trips
 WHERE vehicle_id = 1
   AND trip_on BETWEEN DATE '2026-11-01' AND DATE '2026-11-30';
 
--- ======================================================================
--- (g) Scheduled job [6 marks]
--- ======================================================================
+-- (g) Scheduled job 
 CREATE OR REPLACE PROCEDURE pr_refresh_service_alerts()
 LANGUAGE plpgsql AS $$
 BEGIN
