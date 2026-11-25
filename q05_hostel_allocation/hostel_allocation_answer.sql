@@ -1,11 +1,5 @@
--- ICT371 Advanced Database - Question 5: Hostel Room Allocation
--- Bwalya Marvelous (202406501), Mulungushi University
--- PostgreSQL. Run the whole file in order: psql -d yourdb -f answer.sql
--- Scheduled jobs need the pg_cron extension.
 
--- ======================================================================
--- (a) Database and seed data [6 marks] - tables and seed data
--- ======================================================================
+-- (a) Database and seed data 
 CREATE TABLE students (
   student_id SERIAL PRIMARY KEY,
   student_number VARCHAR(20) NOT NULL UNIQUE,
@@ -50,9 +44,7 @@ INSERT INTO rooms (room_number, capacity) VALUES
 INSERT INTO allocations (student_id, room_id, allocated_on, released_on, status)
 VALUES (4, 3, DATE '2026-03-01', DATE '2026-06-30', 'ENDED');
 
--- ======================================================================
--- (b) Function [6 marks]
--- ======================================================================
+-- (b) Function 
 CREATE OR REPLACE FUNCTION fn_free_beds(p_room_id INT)
 RETURNS INT LANGUAGE plpgsql STABLE AS $$
 DECLARE v_capacity INT; v_occupied INT;
@@ -67,9 +59,8 @@ BEGIN
   RETURN v_capacity - v_occupied;
 END $$;
 
--- ======================================================================
--- (c) Procedure [8 marks]
--- ======================================================================
+-- (c) Procedure
+
 CREATE OR REPLACE PROCEDURE pr_allocate_room(
   p_student_id INT, p_room_id INT, p_allocated_on DATE)
 LANGUAGE plpgsql AS $$
@@ -96,9 +87,8 @@ BEGIN
   VALUES (p_student_id, p_room_id, p_allocated_on, NULL, 'ACTIVE');
 END $$;
 
--- ======================================================================
--- (d) Trigger [8 marks]
--- ======================================================================
+
+-- (d) Trigger
 CREATE OR REPLACE FUNCTION trg_fn_allocation_rules() RETURNS TRIGGER
 LANGUAGE plpgsql AS $$
 DECLARE v_capacity INT; v_occupied INT;
@@ -128,18 +118,16 @@ CREATE TRIGGER trg_allocation_rules
 BEFORE INSERT OR UPDATE ON allocations
 FOR EACH ROW EXECUTE FUNCTION trg_fn_allocation_rules();
 
--- ======================================================================
+
 -- (a) continued - seed data that needs the code above
--- ======================================================================
--- run after pr_allocate_room (c) exists
+
 CALL pr_allocate_room(1, 1, DATE '2026-09-01');
 CALL pr_allocate_room(2, 1, DATE '2026-09-01');   -- R101 now full (2 of 2)
 CALL pr_allocate_room(3, 2, DATE '2026-09-02');   -- R102 partly occupied (1 of 3)
 -- R103 has only ended history, so it is empty
 
--- ======================================================================
--- (e) View [5 marks]
--- ======================================================================
+
+-- (e) View 
 CREATE OR REPLACE VIEW v_room_occupancy AS
 SELECT r.room_id, r.room_number, r.capacity,
        COUNT(a.allocation_id) AS occupied_beds,
@@ -151,9 +139,9 @@ GROUP BY r.room_id, r.room_number, r.capacity;
 
 SELECT * FROM v_room_occupancy ORDER BY room_number;
 
--- ======================================================================
--- (f) Index [5 marks]
--- ======================================================================
+
+-- (f) Index 
+
 CREATE INDEX idx_alloc_active_room
   ON allocations (room_id) WHERE status = 'ACTIVE';
 
@@ -161,9 +149,7 @@ EXPLAIN
 SELECT * FROM allocations
 WHERE room_id = 1 AND status = 'ACTIVE';
 
--- ======================================================================
--- (g) Scheduled job [6 marks]
--- ======================================================================
+-- (g) Scheduled job 
 CREATE OR REPLACE PROCEDURE pr_refresh_occupancy()
 LANGUAGE plpgsql AS $$
 BEGIN
