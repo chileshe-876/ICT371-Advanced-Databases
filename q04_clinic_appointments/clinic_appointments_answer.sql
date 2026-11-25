@@ -1,11 +1,4 @@
--- ICT371 Advanced Database - Question 4: Clinic Appointment Scheduling
--- Bwalya Marvelous (202406501), Mulungushi University
--- PostgreSQL. Run the whole file in order: psql -d yourdb -f answer.sql
--- Scheduled jobs need the pg_cron extension.
-
--- ======================================================================
--- (a) Database and seed data [6 marks] - tables and seed data
--- ======================================================================
+-- a) Tables 
 CREATE TABLE patients (
   patient_id SERIAL PRIMARY KEY,
   full_name VARCHAR(100) NOT NULL
@@ -49,9 +42,9 @@ INSERT INTO appointments
 (2, 3, CURRENT_DATE - 1, '12:00', 'CANCELLED'),
 (3, 3, CURRENT_DATE + 1, '09:00', 'BOOKED');
 
--- ======================================================================
--- (b) Function [6 marks]
--- ======================================================================
+
+-- (b) Function 
+
 CREATE OR REPLACE FUNCTION fn_daily_load(p_doctor_id INT, p_day DATE)
 RETURNS INT LANGUAGE plpgsql STABLE AS $$
 BEGIN
@@ -64,9 +57,8 @@ BEGIN
             AND status <> 'CANCELLED');
 END $$;
 
--- ======================================================================
--- (c) Procedure [8 marks]
--- ======================================================================
+--  (c) Procedure
+
 CREATE OR REPLACE PROCEDURE pr_book_appointment(
   p_patient_id INT, p_doctor_id INT, p_day DATE, p_slot TIME)
 LANGUAGE plpgsql AS $$
@@ -90,9 +82,8 @@ END $$;
 
 CALL pr_book_appointment(3, 1, CURRENT_DATE + 2, TIME '11:00');  -- succeeds
 
--- ======================================================================
--- (d) Trigger [8 marks]
--- ======================================================================
+-- (d) Trigger 
+
 CREATE OR REPLACE FUNCTION trg_fn_slot_clash() RETURNS TRIGGER
 LANGUAGE plpgsql AS $$
 BEGIN
@@ -113,9 +104,8 @@ CREATE TRIGGER trg_slot_clash
 BEFORE INSERT OR UPDATE ON appointments
 FOR EACH ROW EXECUTE FUNCTION trg_fn_slot_clash();
 
--- ======================================================================
--- (e) View [5 marks]
--- ======================================================================
+
+-- (e) View 
 CREATE OR REPLACE VIEW v_today_appointments AS
 SELECT p.full_name AS patient_name,
        d.full_name AS doctor_name,
@@ -129,9 +119,7 @@ ORDER BY a.slot_time;
 
 SELECT * FROM v_today_appointments;
 
--- ======================================================================
--- (f) Index [5 marks]
--- ======================================================================
+-- (f) Index 
 CREATE INDEX idx_appointments_day_doctor
   ON appointments (appointment_day, doctor_id);
 
@@ -139,9 +127,8 @@ EXPLAIN
 SELECT * FROM appointments
 WHERE appointment_day = CURRENT_DATE AND doctor_id = 1;
 
--- ======================================================================
--- (g) Scheduled job [6 marks]
--- ======================================================================
+-- (g) Scheduled job 
+
 CREATE OR REPLACE PROCEDURE pr_refresh_clinic_summary(p_day DATE)
 LANGUAGE plpgsql AS $$
 BEGIN
