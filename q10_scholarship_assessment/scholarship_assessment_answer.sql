@@ -1,11 +1,5 @@
--- ICT371 Advanced Database - Question 10: Scholarship Application Assessment
--- Bwalya Marvelous (202406501), Mulungushi University
--- PostgreSQL. Run the whole file in order: psql -d yourdb -f answer.sql
--- Scheduled jobs need the pg_cron extension.
+-- (a) Database and seed data- tables and seed data
 
--- ======================================================================
--- (a) Database and seed data [6 marks] - tables and seed data
--- ======================================================================
 CREATE TABLE students (
   student_id SERIAL PRIMARY KEY,
   student_number VARCHAR(20) NOT NULL UNIQUE,
@@ -42,9 +36,8 @@ INSERT INTO applications
 (3, 22, 3000.01, 90.00, DATE '2026-10-09'),  -- fails: income just over K3,000
 (3, 21, 1500.00, 69.99, DATE '2026-10-11');  -- fails: mark just under 70
 
--- ======================================================================
--- (b) Function [6 marks]
--- ======================================================================
+
+-- (b) Function 
 CREATE OR REPLACE FUNCTION fn_scholarship_eligible(
   p_age INT, p_income NUMERIC, p_mark NUMERIC)
 RETURNS BOOLEAN LANGUAGE plpgsql IMMUTABLE AS $$
@@ -66,9 +59,8 @@ BEGIN
      AND p_mark >= 70;
 END $$;
 
--- ======================================================================
--- (c) Procedure [8 marks]
--- ======================================================================
+-- (c) Procedure
+
 CREATE OR REPLACE PROCEDURE pr_assess_application(p_application_id INT)
 LANGUAGE plpgsql AS $$
 DECLARE v_age INT; v_income NUMERIC; v_mark NUMERIC; v_status VARCHAR(10);
@@ -89,9 +81,8 @@ BEGIN
   WHERE application_id = p_application_id;
 END $$;
 
--- ======================================================================
--- (d) Trigger [8 marks]
--- ======================================================================
+
+-- (d) Trigger 
 CREATE OR REPLACE FUNCTION trg_fn_decision_audit() RETURNS TRIGGER
 LANGUAGE plpgsql AS $$
 BEGIN
@@ -106,9 +97,8 @@ FOR EACH ROW
 WHEN (OLD.status IS DISTINCT FROM NEW.status)
 EXECUTE FUNCTION trg_fn_decision_audit();
 
--- ======================================================================
--- (e) View [5 marks]
--- ======================================================================
+
+-- (e) View 
 CREATE OR REPLACE VIEW v_approved_applicants AS
 SELECT s.student_number, s.full_name, a.average_mark, a.status
 FROM applications a
@@ -117,9 +107,8 @@ WHERE a.status = 'APPROVED';
 
 SELECT * FROM v_approved_applicants;
 
--- ======================================================================
--- (f) Index [5 marks]
--- ======================================================================
+
+-- (f) Index 
 CREATE INDEX idx_applications_status_submitted
   ON applications (status, submitted_on);
 
@@ -128,9 +117,7 @@ SELECT * FROM applications
 WHERE status = 'PENDING'
   AND submitted_on BETWEEN DATE '2026-10-01' AND DATE '2026-10-31';
 
--- ======================================================================
--- (g) Scheduled job [6 marks]
--- ======================================================================
+-- (g) Scheduled job 
 CREATE OR REPLACE PROCEDURE pr_assess_pending()
 LANGUAGE plpgsql AS $$
 DECLARE r RECORD;
