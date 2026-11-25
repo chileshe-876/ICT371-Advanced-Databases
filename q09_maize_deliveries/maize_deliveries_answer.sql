@@ -1,11 +1,5 @@
--- ICT371 Advanced Database - Question 9: Farmer Cooperative Maize Deliveries
--- Bwalya Marvelous (202406501), Mulungushi University
--- PostgreSQL. Run the whole file in order: psql -d yourdb -f answer.sql
--- Scheduled jobs need the pg_cron extension.
+-- (a) Database and seed data  - tables and seed data
 
--- ======================================================================
--- (a) Database and seed data [6 marks] - tables and seed data
--- ======================================================================
 CREATE TABLE farmers (
   farmer_id SERIAL PRIMARY KEY,
   farmer_number VARCHAR(20) NOT NULL UNIQUE,
@@ -30,9 +24,8 @@ CREATE TABLE daily_purchases (
 INSERT INTO farmers (farmer_number, full_name) VALUES
 ('F001', 'Joseph Mwale'), ('F002', 'Esther Zimba'), ('F003', 'Lazarus Phiri');
 
--- ======================================================================
--- (b) Function [6 marks]
--- ======================================================================
+
+-- (b) Function 
 CREATE OR REPLACE FUNCTION fn_maize_rate(p_grade TEXT)
 RETURNS NUMERIC LANGUAGE plpgsql IMMUTABLE AS $$
 BEGIN
@@ -48,9 +41,8 @@ BEGIN
   RAISE EXCEPTION 'Unsupported grade: %', p_grade;
 END $$;
 
--- ======================================================================
--- (c) Procedure [8 marks]
--- ======================================================================
+
+-- (c) Procedure
 CREATE OR REPLACE PROCEDURE pr_receive_delivery(
   p_farmer_id INT, p_grade TEXT, p_weight NUMERIC, p_date DATE)
 LANGUAGE plpgsql AS $$
@@ -69,9 +61,8 @@ BEGIN
   VALUES (p_farmer_id, p_grade, p_weight, p_date, FALSE);
 END $$;
 
--- ======================================================================
--- (d) Trigger [8 marks]
--- ======================================================================
+
+-- (d) Trigger 
 CREATE OR REPLACE FUNCTION trg_fn_price_delivery() RETURNS TRIGGER
 LANGUAGE plpgsql AS $$
 BEGIN
@@ -90,9 +81,9 @@ FOR EACH ROW EXECUTE FUNCTION trg_fn_price_delivery();
 -- test through the procedure (run after (c) and this trigger exist)
 CALL pr_receive_delivery(1, 'C', 40, DATE '2026-11-24');
 
--- ======================================================================
+
 -- (a) continued - seed data that needs the code above
--- ======================================================================
+
 -- run after the trigger (d) is installed; rate and value come from the trigger
 INSERT INTO deliveries (farmer_id, grade, weight_kg, delivered_on, is_paid) VALUES
 (1, 'A', 100,    DATE '2026-11-20', FALSE),
@@ -102,9 +93,8 @@ INSERT INTO deliveries (farmer_id, grade, weight_kg, delivered_on, is_paid) VALU
 (3, 'B', 200,    DATE '2026-11-22', TRUE),
 (3, 'C',  90,    DATE '2026-11-23', TRUE);
 
--- ======================================================================
--- (e) View [5 marks]
--- ======================================================================
+
+-- (e) View 
 CREATE OR REPLACE VIEW v_farmer_amount_due AS
 SELECT f.farmer_number, f.full_name,
        COALESCE(SUM(d.total_value), 0) AS total_unpaid
@@ -115,9 +105,7 @@ GROUP BY f.farmer_id, f.farmer_number, f.full_name;
 
 SELECT * FROM v_farmer_amount_due;
 
--- ======================================================================
--- (f) Index [5 marks]
--- ======================================================================
+-- (f) Index 
 CREATE INDEX idx_deliveries_farmer_date
   ON deliveries (farmer_id, delivered_on);
 
@@ -126,9 +114,8 @@ SELECT * FROM deliveries
 WHERE farmer_id = 1
   AND delivered_on BETWEEN DATE '2026-11-01' AND DATE '2026-11-30';
 
--- ======================================================================
--- (g) Scheduled job [6 marks]
--- ======================================================================
+
+-- (g) Scheduled job 
 CREATE OR REPLACE PROCEDURE pr_refresh_purchases(p_day DATE)
 LANGUAGE plpgsql AS $$
 BEGIN
