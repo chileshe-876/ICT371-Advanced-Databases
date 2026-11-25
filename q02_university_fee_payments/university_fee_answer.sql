@@ -1,11 +1,4 @@
--- ICT371 Advanced Database - Question 2: University Fee Payments
--- Bwalya Marvelous (202406501), Mulungushi University
--- PostgreSQL. Run the whole file in order: psql -d yourdb -f answer.sql
--- Scheduled jobs need the pg_cron extension.
-
--- ======================================================================
--- (a) Database and seed data [6 marks] - tables and seed data
--- ======================================================================
+-- (a) Database and seed data
 CREATE TABLE students (
   student_id SERIAL PRIMARY KEY,
   student_number VARCHAR(20) NOT NULL UNIQUE,
@@ -36,9 +29,7 @@ INSERT INTO students (student_number, full_name, fee_due) VALUES
 ('202406502', 'Student Two',   4200.00),
 ('202406503', 'Student Three', 3000.00);  -- no payments yet
 
--- ======================================================================
--- (b) Function [6 marks]
--- ======================================================================
+-- (b) Function
 CREATE OR REPLACE FUNCTION fn_fee_balance(p_student_id INT)
 RETURNS NUMERIC LANGUAGE plpgsql STABLE AS $$
 DECLARE v_fee NUMERIC; v_paid NUMERIC;
@@ -52,9 +43,7 @@ BEGIN
   RETURN v_fee - v_paid;
 END $$;
 
--- ======================================================================
--- (c) Procedure [8 marks]
--- ======================================================================
+-- (c) Procedure 
 CREATE OR REPLACE PROCEDURE pr_receive_payment(p_student_id INT, p_amount NUMERIC, p_paid_on DATE)
 LANGUAGE plpgsql AS $$
 DECLARE v_balance NUMERIC;
@@ -74,9 +63,7 @@ BEGIN
   VALUES (p_student_id, p_amount, p_paid_on);
 END $$;
 
--- ======================================================================
--- (d) Trigger [8 marks]
--- ======================================================================
+-- (d) Trigger 
 CREATE OR REPLACE FUNCTION trg_fn_payment_audit() RETURNS TRIGGER
 LANGUAGE plpgsql AS $$
 BEGIN
@@ -90,10 +77,6 @@ AFTER INSERT ON payments
 FOR EACH ROW
 EXECUTE FUNCTION trg_fn_payment_audit();
 
--- ======================================================================
--- (a) continued - seed data that needs the code above
--- ======================================================================
--- run after parts (b), (c), (d) exist
 CALL pr_receive_payment(1, 1000, DATE '2026-11-22');
 CALL pr_receive_payment(1, 1500, DATE '2026-11-23');
 CALL pr_receive_payment(1,  500, DATE '2026-11-23');
