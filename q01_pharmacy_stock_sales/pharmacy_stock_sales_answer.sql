@@ -1,11 +1,6 @@
 -- ICT371 Advanced Database - Question 1: Pharmacy Stock and Daily Sales
--- Bwalya Marvelous (202406501), Mulungushi University
--- PostgreSQL. Run the whole file in order: psql -d yourdb -f answer.sql
--- Scheduled jobs need the pg_cron extension.
-
--- ======================================================================
--- (a) Database and seed data [6 marks] - tables and seed data
--- ======================================================================
+-- Bwalya Marvelous (202406501)
+-- (a) Database and seed data
 CREATE TABLE medicines (
   medicine_id SERIAL PRIMARY KEY,
   medicine_name VARCHAR(100) NOT NULL,
@@ -37,9 +32,7 @@ INSERT INTO medicines (medicine_name, unit_price, stock_qty) VALUES
 ('Amoxicillin 250mg', 35.00, 30),
 ('Ibuprofen 400mg', 18.75, 12);
 
--- ======================================================================
--- (b) Function [6 marks]
--- ======================================================================
+-- (b) Function
 CREATE OR REPLACE FUNCTION fn_sale_value(p_medicine_id INT, p_quantity INT)
 RETURNS NUMERIC LANGUAGE plpgsql STABLE AS $$
 DECLARE v_price NUMERIC;
@@ -54,9 +47,7 @@ BEGIN
   RETURN v_price * p_quantity;
 END $$;
 
--- ======================================================================
--- (c) Procedure [8 marks]
--- ======================================================================
+-- (c) Procedure
 CREATE OR REPLACE PROCEDURE pr_record_sale(p_medicine_id INT, p_quantity INT, p_sold_on DATE)
 LANGUAGE plpgsql AS $$
 DECLARE v_price NUMERIC; v_stock INT;
@@ -78,9 +69,7 @@ BEGIN
   WHERE medicine_id = p_medicine_id;
 END $$;
 
--- ======================================================================
--- (d) Trigger [8 marks]
--- ======================================================================
+-- (d) Trigger
 CREATE OR REPLACE FUNCTION trg_fn_stock_audit() RETURNS TRIGGER
 LANGUAGE plpgsql AS $$
 BEGIN
@@ -95,9 +84,7 @@ FOR EACH ROW
 WHEN (OLD.stock_qty IS DISTINCT FROM NEW.stock_qty)
 EXECUTE FUNCTION trg_fn_stock_audit();
 
--- ======================================================================
--- (a) continued - seed data that needs the code above
--- ======================================================================
+-- (a) continued 
 -- run after pr_record_sale (part c) exists
 CALL pr_record_sale(1, 5, DATE '2026-11-23');
 CALL pr_record_sale(1, 10, DATE '2026-11-23');
@@ -106,9 +93,7 @@ CALL pr_record_sale(3, 3, DATE '2026-11-24');
 CALL pr_record_sale(2, 6, DATE '2026-11-24');
 CALL pr_record_sale(3, 4, DATE '2026-11-24');
 
--- ======================================================================
--- (e) View [5 marks]
--- ======================================================================
+-- (e) View
 CREATE OR REPLACE VIEW v_low_stock AS
 SELECT medicine_id, medicine_name, unit_price, stock_qty AS remaining_stock
 FROM medicines
@@ -117,9 +102,7 @@ WHERE stock_qty < 10;
 CALL pr_record_sale(3, 2, CURRENT_DATE);  -- Ibuprofen drops to 3
 SELECT * FROM v_low_stock;
 
--- ======================================================================
--- (f) Index [5 marks]
--- ======================================================================
+-- (f) Index
 CREATE INDEX idx_sales_medicine_sold_on ON sales (medicine_id, sold_on);
 
 EXPLAIN
@@ -127,9 +110,7 @@ SELECT * FROM sales
 WHERE medicine_id = 1
   AND sold_on BETWEEN DATE '2026-11-01' AND DATE '2026-11-30';
 
--- ======================================================================
--- (g) Scheduled job [6 marks]
--- ======================================================================
+-- (g) Scheduled job
 CREATE OR REPLACE PROCEDURE pr_refresh_sales(p_day DATE)
 LANGUAGE plpgsql AS $$
 BEGIN
