@@ -1,11 +1,4 @@
--- ICT371 Advanced Database - Question 3: Library Returns and Overdue Fines
--- Bwalya Marvelous (202406501), Mulungushi University
--- PostgreSQL. Run the whole file in order: psql -d yourdb -f answer.sql
--- Scheduled jobs need the pg_cron extension.
-
--- ======================================================================
--- (a) Database and seed data [6 marks] - tables and seed data
--- ======================================================================
+-- (a) Database and seed data 
 CREATE TABLE books (
   book_id SERIAL PRIMARY KEY,
   title VARCHAR(150) NOT NULL
@@ -44,9 +37,7 @@ INSERT INTO loans (book_id, borrower_name, borrowed_on, due_on) VALUES
 (3, 'Natasha P.', DATE '2026-11-01', DATE '2026-11-15'),  -- open, overdue
 (3, 'Joseph S.',  DATE '2026-11-20', DATE '2026-11-27');  -- open, not yet due
 
--- ======================================================================
--- (b) Function [6 marks]
--- ======================================================================
+-- (b) Function 
 CREATE OR REPLACE FUNCTION fn_loan_fine(p_loan_id INT, p_as_of DATE)
 RETURNS NUMERIC LANGUAGE plpgsql STABLE AS $$
 DECLARE v_due DATE; v_returned DATE; v_end DATE;
@@ -68,9 +59,7 @@ BEGIN
   RETURN 2 * GREATEST(v_end - v_due, 0);
 END $$;
 
--- ======================================================================
--- (c) Procedure [8 marks]
--- ======================================================================
+-- (c) Procedure
 CREATE OR REPLACE PROCEDURE pr_return_loan(p_loan_id INT, p_returned_on DATE)
 LANGUAGE plpgsql AS $$
 DECLARE v_borrowed DATE; v_returned DATE; v_fine NUMERIC;
@@ -93,9 +82,7 @@ BEGIN
   WHERE loan_id = p_loan_id;
 END $$;
 
--- ======================================================================
--- (d) Trigger [8 marks]
--- ======================================================================
+-- (d) Trigger
 CREATE OR REPLACE FUNCTION trg_fn_loan_audit() RETURNS TRIGGER
 LANGUAGE plpgsql AS $$
 BEGIN
@@ -110,16 +97,11 @@ FOR EACH ROW
 WHEN (OLD.returned_on IS DISTINCT FROM NEW.returned_on)
 EXECUTE FUNCTION trg_fn_loan_audit();
 
--- ======================================================================
--- (a) continued - seed data that needs the code above
--- ======================================================================
--- run after pr_return_loan (c) and the trigger (d) exist
 CALL pr_return_loan(3, DATE '2026-11-03');  -- on the due date: fine 0
 CALL pr_return_loan(4, DATE '2026-10-30');  -- 6 days late: fine K12
 
--- ======================================================================
--- (e) View [5 marks]
--- ======================================================================
+
+-- (e) View
 CREATE OR REPLACE VIEW v_overdue_loans AS
 SELECT l.loan_id, b.title, l.borrower_name, l.due_on,
        fn_loan_fine(l.loan_id, CURRENT_DATE) AS fine_today
@@ -130,9 +112,7 @@ WHERE l.returned_on IS NULL
 
 SELECT * FROM v_overdue_loans;
 
--- ======================================================================
 -- (f) Index [5 marks]
--- ======================================================================
 CREATE INDEX idx_loans_book_unreturned
   ON loans (book_id) WHERE returned_on IS NULL;
 
@@ -140,9 +120,7 @@ EXPLAIN
 SELECT * FROM loans
 WHERE book_id = 1 AND returned_on IS NULL;
 
--- ======================================================================
--- (g) Scheduled job [6 marks]
--- ======================================================================
+-- (g) Scheduled job
 CREATE OR REPLACE PROCEDURE pr_refresh_overdue(p_as_of DATE)
 LANGUAGE plpgsql AS $$
 BEGIN
