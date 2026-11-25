@@ -1,11 +1,5 @@
--- ICT371 Advanced Database - Question 7: Water Meter Readings and Billing
--- Bwalya Marvelous (202406501), Mulungushi University
--- PostgreSQL. Run the whole file in order: psql -d yourdb -f answer.sql
--- Scheduled jobs need the pg_cron extension.
 
--- ======================================================================
--- (a) Database and seed data [6 marks] - tables and seed data
--- ======================================================================
+-- (a) Database and seed data 
 CREATE TABLE customers (
   customer_id SERIAL PRIMARY KEY,
   full_name VARCHAR(100) NOT NULL
@@ -34,9 +28,8 @@ CREATE TABLE receivable_snapshot (
 INSERT INTO customers (full_name) VALUES
 ('Mary Tembo'), ('Peter Kunda'), ('Ruth Musonda');
 
--- ======================================================================
--- (b) Function [6 marks]
--- ======================================================================
+
+-- (b) Function 
 CREATE OR REPLACE FUNCTION fn_water_charge(p_units NUMERIC)
 RETURNS NUMERIC LANGUAGE plpgsql IMMUTABLE AS $$
 BEGIN
@@ -52,9 +45,7 @@ END $$;
 SELECT fn_water_charge(0), fn_water_charge(10), fn_water_charge(12);
 -- 0.00, 50.00, 66.00
 
--- ======================================================================
--- (c) Procedure [8 marks]
--- ======================================================================
+-- (c) Procedure 
 CREATE OR REPLACE PROCEDURE pr_generate_bill(p_reading_id INT, p_due_on DATE)
 LANGUAGE plpgsql AS $$
 DECLARE v_prev NUMERIC; v_curr NUMERIC; v_charge NUMERIC;
@@ -75,9 +66,7 @@ BEGIN
   VALUES (p_reading_id, v_charge, 0, p_due_on);
 END $$;
 
--- ======================================================================
--- (d) Trigger [8 marks]
--- ======================================================================
+-- (d) Trigger
 CREATE OR REPLACE FUNCTION trg_fn_check_reading() RETURNS TRIGGER
 LANGUAGE plpgsql AS $$
 BEGIN
@@ -92,10 +81,9 @@ CREATE TRIGGER trg_check_reading
 BEFORE INSERT OR UPDATE ON readings
 FOR EACH ROW EXECUTE FUNCTION trg_fn_check_reading();
 
--- ======================================================================
+
 -- (a) continued - seed data that needs the code above
--- ======================================================================
--- run after the trigger (d) is installed
+
 INSERT INTO readings
   (customer_id, reading_month, previous_reading, current_reading) VALUES
 (1, DATE '2026-09-01', 100, 100),   --  0 units
@@ -113,9 +101,8 @@ CALL pr_generate_bill(4, DATE '2026-12-10');
 CALL pr_generate_bill(5, DATE '2026-10-10');
 CALL pr_generate_bill(6, DATE '2026-12-10');
 
--- ======================================================================
 -- (e) View [5 marks]
--- ======================================================================
+
 CREATE OR REPLACE VIEW v_overdue_bills AS
 SELECT b.bill_id, c.full_name AS customer_name, b.due_on,
        b.charge - b.amount_paid AS outstanding_amount
@@ -130,9 +117,7 @@ UPDATE bills SET amount_paid = 30 WHERE reading_id = 3;       -- part paid
 UPDATE bills SET amount_paid = charge WHERE reading_id = 5;   -- fully paid
 SELECT * FROM v_overdue_bills;
 
--- ======================================================================
--- (f) Index [5 marks]
--- ======================================================================
+-- (f) Index 
 CREATE INDEX idx_bills_unpaid_due
   ON bills (due_on) WHERE amount_paid < charge;
 
@@ -140,9 +125,7 @@ EXPLAIN
 SELECT * FROM bills
 WHERE amount_paid < charge AND due_on < CURRENT_DATE;
 
--- ======================================================================
--- (g) Scheduled job [6 marks]
--- ======================================================================
+-- (g) Scheduled job
 CREATE OR REPLACE PROCEDURE pr_refresh_receivables()
 LANGUAGE plpgsql AS $$
 BEGIN
