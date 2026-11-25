@@ -1,11 +1,5 @@
--- ICT371 Advanced Database - Question 6: Monthly Payroll Processing
--- Bwalya Marvelous (202406501), Mulungushi University
--- PostgreSQL. Run the whole file in order: psql -d yourdb -f answer.sql
--- Scheduled jobs need the pg_cron extension.
 
--- ======================================================================
--- (a) Database and seed data [6 marks] - tables and seed data
--- ======================================================================
+-- (a) Database and seed data 
 CREATE TABLE employees (
   employee_id SERIAL PRIMARY KEY,
   full_name VARCHAR(100) NOT NULL,
@@ -36,9 +30,7 @@ INSERT INTO employees (full_name, basic_salary, allowance, deduction, active) VA
 ('Cynthia Lungu', 5200.00,  800.00,  700.00, TRUE),
 ('David Simbeye', 4800.00,  600.00,  500.00, TRUE);
 
--- ======================================================================
--- (b) Function [6 marks]
--- ======================================================================
+-- (b) Function 
 CREATE OR REPLACE FUNCTION fn_net_pay(p_employee_id INT)
 RETURNS NUMERIC LANGUAGE plpgsql STABLE AS $$
 DECLARE v_net NUMERIC;
@@ -54,9 +46,8 @@ BEGIN
   RETURN v_net;
 END $$;
 
--- ======================================================================
--- (c) Procedure [8 marks]
--- ======================================================================
+
+-- (c) Procedure 
 CREATE OR REPLACE PROCEDURE pr_process_payroll(p_month DATE)
 LANGUAGE plpgsql AS $$
 DECLARE r RECORD; v_net NUMERIC;
@@ -74,9 +65,8 @@ BEGIN
   END LOOP;
 END $$;
 
--- ======================================================================
--- (d) Trigger [8 marks]
--- ======================================================================
+
+-- (d) Trigger
 CREATE OR REPLACE FUNCTION trg_fn_salary_audit() RETURNS TRIGGER
 LANGUAGE plpgsql AS $$
 BEGIN
@@ -95,10 +85,9 @@ UPDATE employees SET basic_salary = 8500 WHERE employee_id = 1;  -- logged
 UPDATE employees SET basic_salary = 8500 WHERE employee_id = 1;  -- unchanged: no entry
 SELECT * FROM salary_audit;
 
--- ======================================================================
+
 -- (a) continued - seed data that needs the code above
--- ======================================================================
--- run after parts (b) and (c) exist: two payroll months
+
 CALL pr_process_payroll(DATE '2026-09-01');
 CALL pr_process_payroll(DATE '2026-10-01');
 
@@ -107,9 +96,9 @@ UPDATE employees SET active = FALSE WHERE employee_id = 4;
 CALL pr_process_payroll(DATE '2026-11-01');
 CALL pr_process_payroll(DATE '2026-11-01');  -- rerun: existing rows unchanged
 
--- ======================================================================
--- (e) View [5 marks]
--- ======================================================================
+
+-- (e) View 
+
 CREATE OR REPLACE VIEW v_payroll_report AS
 SELECT e.employee_id, e.full_name, p.pay_month, p.gross_pay, p.net_pay
 FROM payroll p
@@ -118,17 +107,15 @@ ORDER BY p.pay_month, e.full_name;
 
 SELECT * FROM v_payroll_report;
 
--- ======================================================================
--- (f) Index [5 marks]
--- ======================================================================
+
+-- (f) Index
 CREATE INDEX idx_payroll_pay_month ON payroll (pay_month);
 
 EXPLAIN
 SELECT * FROM payroll WHERE pay_month = DATE '2026-10-01';
 
--- ======================================================================
--- (g) Scheduled job [6 marks]
--- ======================================================================
+
+-- (g) Scheduled job 
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 SELECT cron.schedule('monthly_payroll', '0 2 1 * *',
   $$CALL pr_process_payroll(
